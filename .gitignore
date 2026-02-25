@@ -1,0 +1,29 @@
+# Node
+node_modules/
+.pnpm-store/
+
+# Next
+.next/
+out/
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# SQLite DB
+*.db
+*.sqlite
+/data/
+
+# OS
+.DS_Store
+
+# Docker
+db-data/
