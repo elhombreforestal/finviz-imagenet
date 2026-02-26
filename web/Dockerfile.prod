@@ -14,7 +14,7 @@ RUN apk add --no-cache python3 make g++
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN pnpm run build:seed
+#RUN pnpm run build:seed
 RUN pnpm run build
 
 # ---------- runner ----------
