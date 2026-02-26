@@ -2,9 +2,19 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist-seed",
-    "module": "CommonJS",
+    "rootDir": ".",
+    "noEmit": false,
+
     "target": "ES2020",
-    "noEmit": false
+    "module": "CommonJS",
+
+    // ✅ override Next.js setting
+    "moduleResolution": "node",
+
+    // recommended for Node scripts
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
   },
   "include": ["scripts/seed-from-xml.ts"]
 }
