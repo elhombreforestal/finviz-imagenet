@@ -16,7 +16,7 @@ RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-#RUN pnpm run build:seed
+RUN pnpm run build:seed
 RUN pnpm run build
 
 # ---------- runner ----------
@@ -33,7 +33,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Seed bundle + XML
-#COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/data ./data
 
 COPY docker/entrypoint.sh /entrypoint.sh
