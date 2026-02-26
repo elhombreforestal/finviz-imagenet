@@ -4,6 +4,7 @@ WORKDIR /app
 
 # deps needed to build better-sqlite3 on Alpine
 RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache sqlite
 
 COPY package.json pnpm-lock.yaml* ./
 RUN corepack enable && pnpm install

@@ -5,6 +5,7 @@ Transforms ImageNet XML structure into a linear tuple representation stored in S
 The application runs entirely inside Docker (both development and production modes).
 
 ---
+## Overview
 
 ### Backend
 1. Parse ImageNet XML file on start-up
@@ -14,7 +15,7 @@ The application runs entirely inside Docker (both development and production mod
 3. Store tuples in SQLite.
 4. Expose API endpoint that:
    - Reads tuples linearly
-   - Rebuilds nested JSON tree
+   - Rebuilds nested JSON tree with O(1) complexity
    - Returns JSON for frontend visualization
 
 ### Frontend
@@ -32,3 +33,26 @@ The application runs entirely inside Docker (both development and production mod
 - Docker
 
 ## Usage
+
+### Development
+
+1. Build and start docker container's dev profile:
+
+    `docker compose --profile dev up --build`
+
+    App uses pnpm as a package manager. When build exits with error in build time, it can be due to SQLite build. This should help:
+
+    `pnpm approve-builds --global`
+
+2. On start the seed script is fetching XML to SQLite database.
+
+3. API endpoint returns the JSON build from tuples in database, it's available on:
+http://localhost:3000/api/tree
+
+4. Frontend is running on http://localhost:3000/
+
+### Production
+
+https://finviz.danielhauser.com/
+
+

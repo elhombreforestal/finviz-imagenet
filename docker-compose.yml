@@ -14,7 +14,7 @@ services:
       - ./web:/app
       - node_modules:/app/node_modules
       - db-data:/data
-    command: sh -lc "pnpm install && pnpm run dev"
+    command: sh -lc "pnpm install && pnpm run seed && pnpm run dev"
   web:
     profiles: ["prod"]
     build:
