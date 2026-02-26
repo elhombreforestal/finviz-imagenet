@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:seed": "esbuild scripts/seed-from-xml.ts --platform=node --target=node20 --format=cjs --bundle --outfile=dist/seed-from-xml.cjs",
+    "build:seed": "tsc -p tsconfig.seed.json",
     "start": "next start",
     "seed": "tsx scripts/seed-from-xml.ts",
     "lint": "eslint"
