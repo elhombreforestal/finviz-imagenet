@@ -16,7 +16,7 @@ RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN pnpm run build:seed
+RUN pnpm run build:seed && test -f dist/seed-from-xml.cjs
 RUN pnpm run build
 
 # ---------- runner ----------
@@ -26,14 +26,18 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN apk add --no-cache libstdc++ sqlite-libs
 RUN mkdir -p /data
 
 # Next standalone output
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+#node_modules for better-sqlite3 (and any other runtime deps)
+COPY --from=deps /app/node_modules ./node_modules
+
 # Seed bundle + XML
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist/seed-from-xml.cjs /app/dist/seed-from-xml.cjs
 COPY --from=builder /app/data ./data
 
 COPY docker/entrypoint.sh /entrypoint.sh
