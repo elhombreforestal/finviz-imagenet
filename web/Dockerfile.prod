@@ -38,7 +38,7 @@ COPY --from=builder /app/dist-seed /app/dist-seed
 COPY --from=deps /app/node_modules ./node_modules
 
 # Seed bundle + XML
-COPY --from=builder /app/dist/seed-from-xml.cjs /app/dist/seed-from-xml.cjs
+COPY --from=builder /app/dist-seed /app/dist-seed
 COPY --from=builder /app/data ./data
 
 COPY docker/entrypoint.sh /entrypoint.sh
