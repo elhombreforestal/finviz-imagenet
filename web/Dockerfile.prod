@@ -33,7 +33,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
 # Seed bundle + XML
-COPY --from=builder /app/dist ./dist
+#COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/data ./data
 
 COPY docker/entrypoint.sh /entrypoint.sh
