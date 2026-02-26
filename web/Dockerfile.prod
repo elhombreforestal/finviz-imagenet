@@ -3,7 +3,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
 RUN corepack enable && pnpm install --frozen-lockfile
 
 # ---------- builder ----------
@@ -16,7 +16,7 @@ RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN pnpm run build:seed && test -f dist/seed-from-xml.cjs
+RUN pnpm run build:seed
 RUN pnpm run build
 
 # ---------- runner ----------
@@ -32,6 +32,7 @@ RUN mkdir -p /data
 # Next standalone output
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/dist-seed /app/dist-seed
 
 #node_modules for better-sqlite3 (and any other runtime deps)
 COPY --from=deps /app/node_modules ./node_modules
