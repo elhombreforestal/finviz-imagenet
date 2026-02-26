@@ -53,6 +53,11 @@ http://localhost:3000/api/tree
 
 ### Production
 
+Production settings depends on hosting. It may include 'prod' profile adjustment.
+
+`docker compose --profile prod build --no-cache`
+`docker compose --profile prod up -d`
+
 https://finviz.danielhauser.com/
 
 
