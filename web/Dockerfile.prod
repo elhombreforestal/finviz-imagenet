@@ -11,10 +11,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
+RUN corepack enable
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN pnpm run build:seed
+#RUN pnpm run build:seed
 RUN pnpm run build
 
 # ---------- runner ----------
