@@ -8,7 +8,7 @@
     "target": "ES2020",
     "module": "CommonJS",
 
-    // ✅ override Next.js setting
+    // override Next.js setting
     "moduleResolution": "node",
 
     // recommended for Node scripts

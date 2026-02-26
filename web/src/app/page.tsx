@@ -1,65 +1,120 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import * as React from "react";
+import { Box, Chip, CircularProgress, Typography } from "@mui/material";
+import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
+
+type Child = {
+  id: number;
+  name: string;
+  path: string;
+  size: number;
+  hasChildren: boolean;
+};
+
+function NodeLabel({ name, size }: { name: string; size: number }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%", pr: 1 }}>
+      <Typography variant="body2" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {name}
+      </Typography>
+      <Box sx={{ ml: "auto" }}>
+        {size > 0 && <Chip label={size} size="small" color="info" variant="outlined" sx={{ minWidth: 56, justifyContent: "center" }} />}
+      </Box>
+    </Box>
+  );
+}
+
+export default function Page() {
+  const [root, setRoot] = React.useState<Child | null>(null);
+
+  // cache: path -> children[]
+  const [childrenByPath, setChildrenByPath] = React.useState<Record<string, Child[]>>({});
+  const [loadingPath, setLoadingPath] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const idToPathRef = React.useRef<Record<string, string>>({});
+
+  // Load top-level nodes once; pick the first as root
+  React.useEffect(() => {
+    fetch("/api/tree/children")
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((top: Child[]) => {
+        if (!top.length) throw new Error("No root nodes returned.");
+        setRoot(top[0]); // ImageNet root should be the biggest
+      })
+      .catch((e) => setError(String(e?.message ?? e)));
+  }, []);
+
+  const loadChildren = React.useCallback(async (path: string) => {
+    if (childrenByPath[path]) return; // already loaded
+    setLoadingPath(path);
+    try {
+      const res = await fetch(`/api/tree/children?path=${encodeURIComponent(path)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const kids = (await res.json()) as Child[];
+      setChildrenByPath((m) => ({ ...m, [path]: kids }));
+    } finally {
+      setLoadingPath((p) => (p === path ? null : p));
+    }
+  }, [childrenByPath]);
+
+  const renderNode = (node: Child) => {
+    idToPathRef.current[String(node.id)] = node.path;
+    const loadedKids = childrenByPath[node.path];
+    const isLoading = loadingPath === node.path;
+
+    return (
+      <TreeItem
+        key={node.id}
+        itemId={String(node.id)}
+        label={<NodeLabel name={node.name} size={node.size} />}
+        onClick={() => {          
+          if (node.hasChildren) loadChildren(node.path);
+        }}
+      >
+        {isLoading && (
+          <TreeItem
+            itemId={`${node.path}::__loading`}
+            label={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.5 }}>
+                <CircularProgress size={14} />
+                <Typography variant="body2">Loading…</Typography>
+              </Box>
+            }
+          />
+        )}
+
+        {(loadedKids ?? []).map(renderNode)}
+
+        {/* Placeholder so expand arrow shows even before children are loaded */}
+        {!loadedKids && node.hasChildren && !isLoading && (
+          <TreeItem itemId={`${node.path}::__placeholder`} label={<Typography variant="body2">Expand to load…</Typography>} />
+        )}
+      </TreeItem>
+    );
+  };
+
+  if (error) return <Box sx={{ p: 3 }}>Error: {error}</Box>;
+  if (!root) return <Box sx={{ p: 3 }}>Loading root…</Box>;
+
+  return (
+    <Box sx={{ p: 2, height: "100%" }}>
+      <SimpleTreeView
+        //load children when node is expanded
+        onExpandedItemsChange={(_, expanded) => {
+          const newest = expanded[expanded.length - 1];
+          if (!newest) return;
+
+          const path = idToPathRef.current[newest];
+          if (path) loadChildren(path);
+        }}
+      >
+        {renderNode(root)}
+      </SimpleTreeView>
+    </Box>
   );
 }
