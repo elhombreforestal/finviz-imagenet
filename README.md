@@ -21,12 +21,14 @@ The application runs entirely inside Docker (both development and production mod
 ### Frontend
 - Fetch tree JSON from API
 - Render visualization
+- Lazy load due to MUI TreeView
 
 ---
 
 ### Technologies Used
 
 - Next.js (App Router)
+- MUI TreeView
 - TypeScript
 - SQLite (better-sqlite3)
 - fast-xml-parser
