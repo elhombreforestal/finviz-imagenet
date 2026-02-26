@@ -1,0 +1,45 @@
+# ---------- deps ----------
+FROM node:20-alpine AS deps
+WORKDIR /app
+RUN apk add --no-cache python3 make g++
+
+COPY package.json pnpm-lock.yaml* ./
+RUN corepack enable && pnpm install --frozen-lockfile
+
+# ---------- builder ----------
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN apk add --no-cache python3 make g++
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN pnpm run build:seed
+RUN pnpm run build
+
+# ---------- runner ----------
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN mkdir -p /data
+
+# Next standalone output
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Seed bundle + XML
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/data ./data
+
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 3000
+
+ENV SQLITE_PATH=/data/app.db
+ENV XML_PATH=/app/data/structure_released.xml
+
+ENTRYPOINT ["/entrypoint.sh"]
